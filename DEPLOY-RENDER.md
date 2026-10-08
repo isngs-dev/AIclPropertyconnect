@@ -1,24 +1,23 @@
-# Deploy AICL on Render (website + API + database)
+# Deploy AICL on Render (website + API together)
 
-`render.yaml` in this repository describes everything:
+`render.yaml` creates two things:
 
-| Piece | Render service | Notes |
+| Piece | Render resource | Notes |
 |---|---|---|
-| Database | `aicl-db` (PostgreSQL, free) | free databases are deleted after ~30 days; upgrade for real use |
-| API | `aicl-api` (Python web service) | runs migrations, then loads demo data once in the background |
-| Website | `aicl-web` (Node web service) | proxies `/api/*` to the API over Render's private network |
+| Database | `aicl-db` (PostgreSQL, free) | free databases are deleted after ~30 days |
+| Website + API | `aicl-portal` (one Docker web service) | the website serves the pages and forwards `/api/*` to the API running in the same container, so there is no cross-service networking to break |
 
 ## Steps
-1. Sign in at https://dashboard.render.com (use "Sign in with GitHub" so Render can read the repo).
-2. **New -> Blueprint**, connect the repository `isngs-dev/AIclPropertyconnect` (authorise Render for it if asked).
-3. Render shows the 3 resources from `render.yaml`. Click **Apply**. The first build takes ~5-10 minutes.
-4. Open the **aicl-web** URL (`https://aicl-web.onrender.com` or similar). Login: `admin@example.com` / `Admin@123`.
-   - The demo data is created a few minutes after the API first starts. Until then login may say "incorrect email or password" - wait and retry.
-   - API health: `<aicl-api url>/api/health`, API docs: `<aicl-api url>/docs`.
-5. If the website URL is not exactly `https://aicl-web.onrender.com`, update `FRONTEND_URL` and `CORS_ORIGINS` on **aicl-api** (Environment tab) to the real URL.
+1. https://dashboard.render.com -> sign in with GitHub.
+2. **New -> Blueprint** -> repository `isngs-dev/AIclPropertyconnect` -> **Apply**.
+3. Wait for the build (~8-12 minutes the first time). Open the `aicl-portal` URL.
+4. **First start only:** the demo data is loaded for ~3-6 minutes after the website is up. During that time login may show an error - wait and retry. Later restarts take seconds.
+5. Login: `admin@example.com` / `Admin@123`.
+
+If you deployed an earlier version of this blueprint (`aicl-api` + `aicl-web`), delete those two services in Render and keep `aicl-db`.
 
 ## Good to know
-- Free web services sleep after ~15 minutes without traffic; the next visit takes ~30-60 s to wake up.
-- Uploaded documents and receipts are written to the service's disk, which is wiped on each deploy/restart on the free plan. For real use add a persistent disk or move storage to S3 (see `backend/app/storage.py`). Receipts are regenerated on download; demo documents are not.
-- Payments run on the built-in **mock gateway**. For Paystack test payments set `PAYMENT_PROVIDER=paystack`, `PAYSTACK_SECRET_KEY=sk_test_...` and add the webhook `https://<aicl-web>/api/payments/webhook/paystack` in the Paystack dashboard.
-- Before real use: remove the demo accounts and login buttons, rotate secrets, and use a paid database.
+- Free services sleep after ~15 minutes without visitors; the next visit takes 30-60 s.
+- Uploaded documents and receipts live on the container disk and are wiped on each deploy/restart (free plan). Receipts are regenerated on download. For real use add a persistent disk or S3 (`backend/app/storage.py`).
+- Payments use the built-in mock gateway. For Paystack test payments set `PAYMENT_PROVIDER=paystack` and `PAYSTACK_SECRET_KEY=sk_test_...` in the service's Environment tab.
+- Logs: Render dashboard -> `aicl-portal` -> Logs (look for `alembic` / `Seeded:` lines).

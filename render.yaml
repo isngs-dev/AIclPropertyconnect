@@ -1,4 +1,4 @@
-# One-click deploy of the whole AICL portal on Render: PostgreSQL + API (FastAPI) + website (Next.js).
+# One-click deploy on Render: ONE web service runs the website and the API together, plus a PostgreSQL database.
 # Render dashboard -> New -> Blueprint -> pick this repository -> Apply.
 databases:
   - name: aicl-db
@@ -8,17 +8,12 @@ databases:
 
 services:
   - type: web
-    name: aicl-api
-    runtime: python
+    name: aicl-portal
+    runtime: docker
     plan: free
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    # Creates the schema, loads the demo data once in the background (first start only), then serves the API.
-    startCommand: sh -c "alembic upgrade head && (python -m app.seed > /tmp/seed.log 2>&1 &) && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-    healthCheckPath: /api/health
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.7
       - key: DATABASE_URL
         fromDatabase:
           name: aicl-db
@@ -27,25 +22,5 @@ services:
         generateValue: true
       - key: PAYMENT_PROVIDER
         value: mock            # switch to "paystack" and add PAYSTACK_SECRET_KEY for real test payments
-      - key: FRONTEND_URL
-        value: https://aicl-web.onrender.com   # change if Render gives the website a different URL
-      - key: CORS_ORIGINS
-        value: https://aicl-web.onrender.com
       - key: ENABLE_SCHEDULER
         value: "true"
-
-  - type: web
-    name: aicl-web
-    runtime: node
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npx next start -p $PORT
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: API_HOSTPORT       # the API's private-network address; the website proxies /api/* to it
-        fromService:
-          type: web
-          name: aicl-api
-          property: hostport
