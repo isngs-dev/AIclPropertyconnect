@@ -10,7 +10,7 @@ services:
   - type: web
     name: aicl-portal
     runtime: docker
-    plan: free
+    plan: pro                  # paid instance: always on (no sleeping), 4 GB RAM / 2 CPU
     dockerfilePath: ./Dockerfile
     healthCheckPath: /login
     envVars:
