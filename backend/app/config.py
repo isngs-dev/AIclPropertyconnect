@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _absolute_paths(self):
         """Resolve relative SQLite / storage paths against the backend folder, not the process cwd."""
+        for old in ("postgres://", "postgresql://"):  # Render gives postgresql://...; we use the psycopg 3 driver
+            if self.DATABASE_URL.startswith(old):
+                self.DATABASE_URL = "postgresql+psycopg://" + self.DATABASE_URL[len(old):]
         prefix = "sqlite:///"
         rest = self.DATABASE_URL[len(prefix):]
         if self.DATABASE_URL.startswith(prefix) and rest and not Path(rest).is_absolute():
