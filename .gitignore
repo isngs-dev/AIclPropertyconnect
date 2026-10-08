@@ -1,0 +1,24 @@
+# dependencies / build output
+node_modules/
+.next/
+out/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.tsbuildinfo
+
+# local data and secrets - never commit
+*.db
+*.db-journal
+backend/storage/
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.zip

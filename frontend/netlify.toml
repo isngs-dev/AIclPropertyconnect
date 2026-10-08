@@ -1,0 +1,8 @@
+# Netlify settings for the AICL website (Next.js). Netlify detects Next.js and installs its runtime automatically.
+[build]
+  command = "npm run build"
+  # publish directory is handled by the Netlify Next.js runtime - leave it unset
+
+[build.environment]
+  NODE_VERSION = "20"
+  # REQUIRED: set API_URL in Site settings -> Environment variables to your deployed backend, e.g. https://aicl-api.onrender.com

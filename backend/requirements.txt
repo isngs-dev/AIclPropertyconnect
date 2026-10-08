@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+pydantic
+pydantic-settings
+pyjwt
+bcrypt
+python-multipart
+reportlab
+openpyxl
+httpx
+pytest
+apscheduler
+email-validator
+psycopg[binary]
