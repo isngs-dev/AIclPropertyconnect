@@ -20,5 +20,5 @@ ENV API_URL=http://127.0.0.1:8110
 ENV NODE_OPTIONS=--max-old-space-size=1536
 RUN cd frontend && npm run build
 
-ENV PATH="/opt/venv/bin:$PATH" PYTHONUNBUFFERED=1
+ENV PATH="/opt/venv/bin:$PATH" PYTHONUNBUFFERED=1 SEED_LITE=1
 CMD ["sh", "/app/start-render.sh"]

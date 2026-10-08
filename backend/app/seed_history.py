@@ -18,7 +18,7 @@ from .models import (AuditLog, Charge, ChargeRate, ChargeType, Grievance, Grieva
                      Market, Notification, Payment, PaymentAllocation, Receipt, Shop, ShopDocument, User, utcnow)
 from .money import financial_year
 from .security import hash_password
-from .seed import dummy_pdf, month_iter
+from .seed import LITE, dummy_pdf, month_iter
 from .storage import storage
 
 rnd = random.Random(2024)
@@ -159,7 +159,7 @@ def main():
         db.add(Receipt(payment_id=p.id, receipt_no=f"RCP-{paid_at.year}-{rcount:06d}"))
         db.flush()
         db.refresh(p)
-        p.receipt.file_key = storage.save(build_receipt_pdf(p), "receipts", ".pdf")
+        p.receipt.file_key = None if LITE else storage.save(build_receipt_pdf(p), "receipts", ".pdf")  # lite: PDF is generated on download
     db.flush()
     # a spread of failed / cancelled attempts across the whole history
     pool = [c for c in db.scalars(select(Charge).where(Charge.status == "PAID")).all() if c.paid_at and c.paid_at.date() >= START]

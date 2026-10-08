@@ -13,7 +13,7 @@ from .db import SessionLocal
 from .gateway import build_receipt_pdf
 from .models import (AuditLog, Charge, ChargeRate, ChargeType, Grievance, GrievanceMessage, GrievanceStatusHistory, Notification,
                      Payment, PaymentAllocation, Receipt, Shop, User, utcnow)
-from .seed import month_iter
+from .seed import LITE, month_iter
 from .seed_history import profile_of
 from .storage import storage
 
@@ -75,7 +75,7 @@ def main():
         db.add(Receipt(payment_id=p.id, receipt_no=f"RCP-{paid_at.year}-{rcount:06d}"))
         db.flush()
         db.refresh(p)
-        p.receipt.file_key = storage.save(build_receipt_pdf(p), "receipts", ".pdf")
+        p.receipt.file_key = None if LITE else storage.save(build_receipt_pdf(p), "receipts", ".pdf")  # lite: PDF is generated on download
     db.flush()
     paid = [c for c in charges if c.status == "PAID"]
     for c in rnd.sample(paid, min(16, len(paid))):

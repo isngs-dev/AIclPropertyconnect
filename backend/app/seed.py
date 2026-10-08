@@ -26,6 +26,8 @@ from .security import hash_password
 from .storage import storage
 
 random.seed(7)
+import os
+LITE = os.environ.get("SEED_LITE") == "1"  # cloud demo: skip pre-rendering ~1,500 receipt PDFs (slow on small CPUs)
 RUPEE = 100
 
 
@@ -172,7 +174,7 @@ def main(reset: bool = False, owners_n: int = 3, keep_signups: bool = False):
         db.add(Receipt(payment_id=p.id, receipt_no=f"RCP-{paid_at.year}-{seq:06d}"))
         db.flush()
         db.refresh(p)
-        p.receipt.file_key = storage.save(build_receipt_pdf(p), "receipts", ".pdf")
+        p.receipt.file_key = None if LITE else storage.save(build_receipt_pdf(p), "receipts", ".pdf")  # lite: PDF is generated on download
     # a few unsuccessful attempts for realism
     unpaid = db.scalars(select(Charge).where(Charge.status.in_(["PENDING", "OVERDUE"]), Charge.charge_type_id == sc.id)
                         .order_by(Charge.due_date)).all()

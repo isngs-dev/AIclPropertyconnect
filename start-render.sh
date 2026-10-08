@@ -6,10 +6,16 @@ PORT="${PORT:-10000}"
 cd /app/frontend
 ./node_modules/.bin/next start -p "$PORT" &
 
-# 2) Database schema, then demo data (only the very first time; later boots skip it in seconds).
+# 2) Database schema (fast).
 cd /app/backend
 alembic upgrade head || { echo "alembic failed"; exit 1; }
-python -m app.seed || echo "seed finished with an error (see log above)"
 
-# 3) The API on the private loopback port the website proxies to.
-exec uvicorn app.main:app --host 127.0.0.1 --port 8110
+# 3) The API comes up right away on the private loopback port the website proxies to...
+uvicorn app.main:app --host 127.0.0.1 --port 8110 &
+
+# 4) ...while the demo data loads in the background (first start only; later boots skip it in seconds).
+python -m app.seed || echo "seed finished with an error (see log above)"
+echo "demo data step finished"
+
+# keep the container alive as long as the website / API run
+wait
